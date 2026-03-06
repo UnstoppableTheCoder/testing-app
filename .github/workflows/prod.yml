@@ -1,0 +1,53 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Push to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v3
+
+      - name: Execute remote SSH commands using SSH key
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: 13.234.217.103
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+
+            # Load NVM
+            export NVM_DIR="$HOME/.nvm"
+            if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+            fi
+            source "$NVM_DIR/nvm.sh"
+
+            # Go to project
+            cd testing-app
+
+            # Pull latest code
+            git pull origin main
+
+            # Install dependencies
+            bun install
+
+            # Check if PM2 process exists
+            if pm2 describe bun-server > /dev/null; then
+              echo "Process exists. Reloading..."
+              pm2 reload bun-server
+            else
+              echo "Process not found. Starting new process..."
+              pm2 start index.ts --name bun-server --interpreter bun
+            fi
+
+            # Save PM2 process list
+            pm2 save
