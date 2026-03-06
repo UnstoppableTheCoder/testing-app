@@ -38,6 +38,7 @@ jobs:
             git pull origin main
 
             # Install dependencies
+            export PATH=$PATH:/home/ubuntu/.bun/bin
             bun install
 
             # Check if PM2 process exists
