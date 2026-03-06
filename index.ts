@@ -5,6 +5,7 @@ const server = Bun.serve({
   routes: {
     "/": new Response("This is the homepage"),
     "/health-check": new Response("OK"),
+    "/heart-check": new Response("Broken"),
     "/hostname": new Response(`${os.hostname}`),
     "/message": {
       GET: () => Response.json({ message: "hello there" }),
